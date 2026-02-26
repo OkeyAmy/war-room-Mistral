@@ -155,9 +155,44 @@ export default function WarRoomPage() {
   const [sessionTimeLeft, setSessionTimeLeft] = useState(5400); // 90 min
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
 
+  // Layout states
+  const [leftSidebarWidth, setLeftSidebarWidth] = useState(240);
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(240);
+  const [bottomHeight, setBottomHeight] = useState(220);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const resizingSide = useRef<"left" | "right" | "bottom" | null>(null);
+
   const speechIdx = useRef(0);
   const intelIdx = useRef(0);
   const decisionIdx = useRef(0);
+
+  // Resize logic
+  const handleMouseDown = (side: "left" | "right" | "bottom") => {
+    resizingSide.current = side;
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = side === "bottom" ? "row-resize" : "col-resize";
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!resizingSide.current) return;
+
+    if (resizingSide.current === "left") {
+      setLeftSidebarWidth(Math.max(160, Math.min(400, e.clientX)));
+    } else if (resizingSide.current === "right") {
+      setRightSidebarWidth(Math.max(160, Math.min(400, window.innerWidth - e.clientX)));
+    } else if (resizingSide.current === "bottom") {
+      setBottomHeight(Math.max(100, Math.min(400, window.innerHeight - e.clientY - 60))); // Adjusted for command bar
+    }
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    resizingSide.current = null;
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = "default";
+  }, []);
 
   // Session countdown
   useEffect(() => {
@@ -307,6 +342,7 @@ export default function WarRoomPage() {
 
   return (
     <div
+      ref={containerRef}
       className="war-room-app"
       style={{
         display: "flex",
@@ -327,10 +363,26 @@ export default function WarRoomPage() {
       <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
 
         {/* Left: Agent Roster */}
-        <AgentRoster
-          agents={agents}
-          selectedAgentId={selectedAgentId}
-          onSelectAgent={setSelectedAgentId}
+        <div style={{ width: `${leftSidebarWidth}px`, flexShrink: 0, display: "flex", overflow: "hidden" }}>
+          <AgentRoster
+            agents={agents}
+            selectedAgentId={selectedAgentId}
+            onSelectAgent={setSelectedAgentId}
+          />
+        </div>
+
+        {/* Resizer Left */}
+        <div
+          onMouseDown={() => handleMouseDown("left")}
+          style={{
+            width: "4px",
+            background: "#1E2D3D",
+            cursor: "col-resize",
+            zIndex: 50,
+            transition: "background 150ms ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#4A9EFF")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#1E2D3D")}
         />
 
         {/* Center Column */}
@@ -346,13 +398,26 @@ export default function WarRoomPage() {
             />
           </div>
 
+          {/* Resizer Bottom */}
+          <div
+            onMouseDown={() => handleMouseDown("bottom")}
+            style={{
+              height: "4px",
+              background: "#1E2D3D",
+              cursor: "row-resize",
+              zIndex: 50,
+              transition: "background 150ms ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#4A9EFF")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#1E2D3D")}
+          />
+
           {/* Center Bottom Row */}
           <div
             style={{
-              height: "220px",
+              height: `${bottomHeight}px`,
               flexShrink: 0,
               display: "flex",
-              borderTop: "1px solid #1E2D3D",
               overflow: "hidden",
             }}
           >
@@ -370,15 +435,29 @@ export default function WarRoomPage() {
           </div>
         </div>
 
+        {/* Resizer Right */}
+        <div
+          onMouseDown={() => handleMouseDown("right")}
+          style={{
+            width: "4px",
+            background: "#1E2D3D",
+            cursor: "col-resize",
+            zIndex: 50,
+            transition: "background 150ms ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#4A9EFF")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#1E2D3D")}
+        />
+
         {/* Right: Panel Stack */}
         <div
           style={{
-            width: "220px",
+            width: `${rightSidebarWidth}px`,
             flexShrink: 0,
-            borderLeft: "1px solid #1E2D3D",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
+            background: "#0D1117",
           }}
         >
           <div className="wr-scrollbar" style={{ flex: 1, overflowY: "auto" }}>

@@ -23,21 +23,21 @@ interface AgentRosterProps {
 
 function SpeakingAnimation() {
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: "2px", height: "12px" }}>
-      {[1, 2, 3, 4, 5].map((i) => (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: "2px", height: "14px" }}>
+      {[1, 2, 3, 4, 5, 6, 7].map((i) => (
         <div
           key={i}
-          className={`wave-bar-${i}`}
+          className={`wave-bar-${(i % 7) + 1}`}
           style={{
             width: "2px",
-            background: "#00C896",
+            background: "#00E5FF",
             borderRadius: "1px",
             height: "100%",
           }}
         />
       ))}
     </div>
-  );
+  )
 }
 
 export default function AgentRoster({
@@ -49,92 +49,67 @@ export default function AgentRoster({
 
   return (
     <div
+      className="wr-scrollbar"
       style={{
-        width: "220px",
-        flexShrink: 0,
+        width: "100%",
+        height: "100%",
         background: "#0D1117",
-        borderRight: "1px solid #1E2D3D",
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
+        overflowY: "auto",
       }}
     >
-      {/* Panel Header */}
-      <div
-        style={{
-          height: "36px",
-          padding: "0 16px",
-          borderBottom: "1px solid #1E2D3D",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexShrink: 0,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontWeight: 600,
-            fontSize: "11px",
-            letterSpacing: "0.12em",
-            color: "#8A9BB0",
-          }}
-        >
-          CRISIS TEAM
-        </span>
-      </div>
+      {agents.map((agent) => {
+        const isSelected = selectedAgentId === agent.id;
+        const isHovered = hoveredId === agent.id;
+        const isSpeaking = agent.status === "speaking";
 
-      {/* Agent List */}
-      <div className="wr-scrollbar" style={{ overflowY: "auto", flex: 1 }}>
-        {agents.map((agent) => {
-          const isSelected = selectedAgentId === agent.id;
-          const isHovered = hoveredId === agent.id;
-
-          return (
-            <div
-              key={agent.id}
-              onClick={() => onSelectAgent(isSelected ? null : agent.id)}
-              onMouseEnter={() => setHoveredId(agent.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              style={{
-                padding: "12px 16px",
-                borderBottom: "1px solid #1E2D3D",
-                background: isSelected || isHovered ? "#161F2A" : "transparent",
-                cursor: "pointer",
-                transition: "background 150ms ease",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                <span
-                  style={{
-                    fontFamily: "'Rajdhani', sans-serif",
-                    fontWeight: 600,
-                    fontSize: "14px",
-                    letterSpacing: "0.04em",
-                    color: isSelected ? "#4A9EFF" : "#E8EDF2",
-                  }}
-                >
-                  {agent.name}
-                </span>
-                {agent.status === "speaking" && <SpeakingAnimation />}
-              </div>
-
-              <div
+        return (
+          <div
+            key={agent.id}
+            onClick={() => onSelectAgent(isSelected ? null : agent.id)}
+            onMouseEnter={() => setHoveredId(agent.id)}
+            onMouseLeave={() => setHoveredId(null)}
+            style={{
+              padding: "16px 20px",
+              borderBottom: "1px solid #1E2D3D",
+              background: isSelected ? "rgba(74, 158, 255, 0.1)" : isHovered ? "rgba(255, 255, 255, 0.02)" : "transparent",
+              cursor: "pointer",
+              transition: "all 200ms ease",
+              borderLeft: isSelected ? "2px solid #4A9EFF" : "2px solid transparent",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+              <span
                 style={{
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontWeight: 400,
-                  fontSize: "10px",
-                  color: "#8A9BB0",
+                  fontFamily: "'Rajdhani', sans-serif",
+                  fontWeight: 700,
+                  fontSize: "15px",
+                  letterSpacing: "0.06em",
+                  color: isSelected ? "#4A9EFF" : "#E8EDF2",
                   textTransform: "uppercase",
-                  letterSpacing: "0.05em",
                 }}
               >
-                {agent.role}
-              </div>
+                {agent.name}
+              </span>
+              {isSpeaking && <SpeakingAnimation />}
             </div>
-          );
-        })}
-      </div>
+
+            <div
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontWeight: 500,
+                fontSize: "10px",
+                color: isSelected ? "#4A9EFF" : "#4A5568",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+              }}
+            >
+              {agent.role}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
