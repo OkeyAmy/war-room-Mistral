@@ -4,14 +4,15 @@ google-cloud-firestore
 google-cloud-pubsub
 google-generativeai
 google-genai
+mistralai
 fastapi
 uvicorn[standard]
 websockets
 pydantic
 pydantic-settings
 python-dotenv
-livekit-agents[google,elevenlabs]
-livekit-plugins-google
+livekit-agents[mistralai,elevenlabs]
+livekit-plugins-mistral
 livekit-plugins-elevenlabs
 
 # Testing

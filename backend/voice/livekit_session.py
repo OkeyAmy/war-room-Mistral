@@ -34,7 +34,7 @@ def build_scenario_instruction_guide(
         "4) Generate SKILL instructions for each agent.\n"
         "5) Build LiveKit AgentSession parameters with STT-LLM-TTS pipeline:\n"
         "   - STT provider: ElevenLabs (scribe_v1)\n"
-        "   - LLM provider: Gemini text model\n"
+        "   - LLM provider: Mistral text model\n"
         "   - TTS provider: ElevenLabs\n"
         "6) Enable multimodality (audio + text + transcriptions).\n"
         "7) Enable turn detection and chairman interruption routing.\n"
@@ -75,7 +75,7 @@ def build_livekit_agent_session_config(
         "pipeline": {
             "mode": "stt-llm-tts",
             "stt": f"elevenlabs/{stt_model}",
-            "llm": f"google/{text_model}",
+            "llm": f"mistral/{text_model}",
             "tts": f"elevenlabs/{tts_model}:{assigned_voice}",
         },
         "multimodality": {

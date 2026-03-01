@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     google_application_credentials: str = ""
     google_api_key: str = ""
 
+    # Mistral
+    mistral_api_key: str = ""
+
     # Firestore
     firestore_emulator_host: str = ""
 
@@ -29,15 +32,14 @@ class Settings(BaseSettings):
     pubsub_emulator_host: str = ""
     pubsub_topic: str = "war-room-events"
 
-    # Gemini Models
+    # Mistral Models
     # LLM reasoning model for agent content generation.
-    text_model: str = "gemini-3-flash-preview"
+    text_model: str = "mistral-medium-latest"
     # Legacy realtime model (used only if voice_backend="gemini_live").
     live_model: str = "gemini-2.5-flash-native-audio-preview-12-2025"
 
     # Voice backend:
-    # - "livekit_elevenlabs": ElevenLabs STT/TTS via LiveKit plugins + Gemini LLM
-    # - "gemini_live": legacy direct Gemini native audio websocket
+    # - "livekit_elevenlabs": ElevenLabs STT/TTS via LiveKit plugins + Mistral LLM
     voice_backend: str = "livekit_elevenlabs"
     # Temporary stabilization mode: only one agent is allowed to speak.
     # Set to False to re-enable multi-agent autonomous voice.
@@ -84,4 +86,6 @@ def get_settings() -> Settings:
         os.environ.setdefault(
             "GOOGLE_APPLICATION_CREDENTIALS", s.google_application_credentials
         )
+    if s.mistral_api_key:
+        os.environ.setdefault("MISTRAL_API_KEY", s.mistral_api_key)
     return s
