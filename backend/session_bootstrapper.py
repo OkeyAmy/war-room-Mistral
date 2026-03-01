@@ -112,7 +112,7 @@ async def bootstrap_session(
     4.  Assign unique voices to each agent
     5.  Generate SKILL.md for each agent (parallel)
     6.  Initialize each CrisisAgent (parallel)
-    7.  Open Gemini Live WebSocket for each agent (parallel)
+    7.  Open Mistral AI LiveKit session for each agent (parallel)
     8.  Initialize Observer Agent (reads all public data)
     9.  Schedule World Agent escalation events
     10. Push "session_ready" event → frontend moves to War Room
@@ -212,7 +212,7 @@ async def bootstrap_session(
             },
             "providers": {
                 "stt": "elevenlabs",
-                "llm": "google_gemini",
+                "llm": "mistral",
                 "tts": "elevenlabs",
             },
             "turn_detection": {
@@ -535,7 +535,7 @@ async def bootstrap_session(
     })
 
     # Step 11: Kick-start the briefing round.
-    # Each agent's persistent _receive_from_gemini loop is already running.
+    # Each agent's persistent _receive_from_mistral loop is already running.
     # We just need to send them the initial crisis brief to trigger speech.
     crisis_brief = scenario.get(
         "crisis_brief",
@@ -574,7 +574,7 @@ async def bootstrap_session(
                 logger.warning(f"Failed to send briefing to {role_key}: {e}")
 
             # Wait for the agent to finish speaking before moving to the next.
-            # The TurnManager lock will be acquired by _receive_from_gemini
+            # The TurnManager lock will be acquired by _receive_from_mistral
             # when the agent starts speaking, and released when done.
             # We poll until the floor is free (max 20s per agent).
             for _ in range(40):

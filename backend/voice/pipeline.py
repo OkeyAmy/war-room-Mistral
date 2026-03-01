@@ -1,6 +1,6 @@
 """
 WAR ROOM — Voice Pipeline
-Handles audio flow between chairman, agents, and the Gemini Live API.
+Handles audio flow between chairman, agents, and the Mistral AI via LiveKit.
 Streams audio directly to frontend via WebSocket (bypasses Firestore).
 Handles interruptions (barge-in), turn completion, and Observer feed.
 """
@@ -266,12 +266,9 @@ async def handle_chairman_text(
     target_agent_id: str | None = None,
 ) -> None:
     """
-    Route chairman free-text to agent(s) via their Gemini Live sessions.
-
-    Per voice.md §1.6 and api_backend.md §11:
-      Chairman text → agent.send_text() → Gemini processes → agent responds in voice.
-
-    The agent's persistent _receive_from_gemini() loop handles the response.
+    Route chairman free-text to agent(s) via their Mistral AI sessions via LiveKit.
+    Chairman text → agent.send_text() → Mistral processes → agent responds in voice.
+    The agent's persistent _receive_from_mistral() loop handles the response.
 
     Args:
         session_id: The crisis session ID.

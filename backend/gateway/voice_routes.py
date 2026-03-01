@@ -283,7 +283,7 @@ async def get_voice_status(
 ):
     """
     Check voice session health for all agents.
-    Returns whether each agent's Gemini Live session is active.
+    Returns whether each agent's Mistral AI session is active.
     """
     sid, token = await _extract_session_and_token(session_id, authorization)
 
@@ -368,7 +368,7 @@ async def post_chairman_command(
 ):
     """
     Chairman sends a text directive to the room or a specific agent.
-    The text is injected into the target agent's Gemini Live session
+    The text is injected into the target agent's Mistral AI session
     so they respond to it with voice.
     """
     from utils.events import push_event

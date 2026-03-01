@@ -82,7 +82,7 @@ app = FastAPI(
     title="⚔️ WAR ROOM — Backend API",
     description=(
         "Multi-agent AI crisis simulation platform. "
-        "Powered by Google ADK, Gemini Live API, and Firestore."
+        "Powered by Mistral AI, LiveKit, and Firestore."
     ),
     version="1.0.0",
     lifespan=lifespan,
@@ -380,7 +380,7 @@ async def delete_session(
     token: str = Depends(get_chairman_token),
 ):
     """
-    End session, release all Gemini Live connections, clean Firestore.
+    End session, release all Mistral AI connections, clean Firestore.
     Does NOT delete Firestore data (preserved for after-action report).
     """
     session_data = await validate_chairman_token(session_id, token)
@@ -451,19 +451,19 @@ async def health_check():
     env = settings.environment
     checks: dict[str, dict] = {}
 
-    async def check_gemini_text():
+    async def check_mistral_text():
         try:
-            from google import genai
-            client = genai.Client(api_key=settings.google_api_key) if settings.google_api_key else genai.Client()
-            model_info = client.models.get(model=settings.text_model)
-            if model_info and model_info.name:
+            from mistralai import Mistral
+            client = Mistral(api_key=settings.mistral_api_key) if settings.mistral_api_key else Mistral()
+            model_info = client.models.get_model(model_id=settings.text_model)
+            if model_info and model_info.id:
                 return {
                     "status": "pass",
-                    "message": f"Model reachable: {model_info.display_name or model_info.name}",
+                    "message": f"Model reachable: {model_info.id}",
                 }
             return {"status": "fail", "message": "Model returned empty info"}
         except ImportError:
-            return {"status": "warn", "message": "google-genai SDK not installed"}
+            return {"status": "warn", "message": "mistralai SDK not installed"}
         except Exception as e:
             status = "warn" if env == "development" else "fail"
             return {"status": status, "message": str(e)}
@@ -591,7 +591,7 @@ async def health_check():
             return {"status": "fail", "message": str(e)}
 
     results = await asyncio.gather(
-        check_gemini_text(),
+        check_mistral_text(),
         check_database(),
         check_event_system(),
         check_agent_memory(),
@@ -605,7 +605,7 @@ async def health_check():
     )
 
     check_names = [
-        "gemini_text_model",
+        "mistral_text_model",
         "database",
         "event_system",
         "agent_memory",
@@ -653,10 +653,10 @@ async def health_check():
 @app.get(
     "/api/voices",
     tags=["System"],
-    summary="List available Gemini HD voices",
+    summary="List available ElevenLabs voices",
 )
 async def list_voices():
-    """List available Gemini HD voices — fetched from SDK with fallback."""
+    """List available ElevenLabs voices — fetched from SDK with fallback."""
     from utils.voice_discovery import discover_voices, get_voice_style_map
 
     voices = await discover_voices()

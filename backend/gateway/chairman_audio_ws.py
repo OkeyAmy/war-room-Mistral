@@ -7,7 +7,7 @@ Separate from the main event WebSocket to keep audio data out of event logs.
 
 Flow:
   Frontend captures mic → PCM 16kHz 16-bit mono → base64 encode → send on WS
-  Backend decodes → routes to target agent's Gemini Live session
+  Backend decodes → routes to target agent's Mistral AI session
   Agent responds → audio streamed via main event WS
 """
 

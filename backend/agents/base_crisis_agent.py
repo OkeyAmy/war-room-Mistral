@@ -1,10 +1,10 @@
 """
 WAR ROOM — Base Crisis Agent
-Per voice.md: ONE agent = ONE Gemini Live session = ONE Firestore collection.
+Per voice.md: ONE agent = ONE Mistral AI session = ONE Firestore collection.
 
 Each agent runs a PERSISTENT background loop:
-  _receive_from_gemini() → streams audio chunks + transcripts to frontend
-  _send_audio_to_gemini() → drains audio_in_queue from chairman mic
+  _receive_from_mistral() → streams audio chunks + transcripts to frontend
+  _send_audio_to_mistral() → drains audio_in_queue from chairman mic
   _autonomous_turn_trigger() → keeps discussion alive without chairman
 
 MEMORY ISOLATION:
@@ -33,15 +33,15 @@ logger = logging.getLogger(__name__)
 
 class CrisisAgent:
     """
-    One CrisisAgent = one Gemini Live session = one Firestore collection.
+    One CrisisAgent = one Mistral AI session = one Firestore collection.
 
     AUDIO PIPELINE:
-      Gemini PCM → _receive_from_gemini() → push_event_direct(agent_audio_chunk)
+      Mistral audio → _receive_from_mistral() → push_event_direct(agent_audio_chunk)
               → WS queue → browser AudioManager.playChunk() → speakers
 
     CHAIRMAN AUDIO:
-      browser mic → WS binary → audio_in_queue → _send_audio_to_gemini()
-              → agent.live_session → Gemini processes → responds
+      browser mic → WS binary → audio_in_queue → _send_audio_to_mistral()
+              → agent.live_session → Mistral processes → responds
     """
 
     ALLOWED_VOICE_POOL = ALLOWED_VOICE_POOL
@@ -69,7 +69,7 @@ class CrisisAgent:
         # ADK session ID — unique per agent instance
         self.adk_session_id = str(uuid.uuid4())
 
-        # Gemini Live session (opened by initialize_live_session)
+        # Mistral AI session (opened by initialize_live_session)
         self.live_session = None
         self._live_ctx = None
 
@@ -133,7 +133,7 @@ class CrisisAgent:
             )
         if self.live_session:
             return (
-                f"backend=gemini_live "
+                f"backend=mistral_live "
                 f"realtime_model={self.live_model} "
                 f"voice={self.assigned_voice} "
                 f"llm={self.text_model}"
@@ -263,13 +263,13 @@ class CrisisAgent:
             _read_my_private_memory, _write_my_private_memory,
         ]
 
-    # ── Gemini Live Session Setup ─────────────────────────────────────
+    # ── Mistral AI Session Setup ─────────────────────────────────────
 
     async def initialize_live_session(self):
         """
         Initialize per-agent voice runtime.
         Only supported runtime:
-          - LiveKit ElevenLabs STT/TTS plugins + Gemini text LLM
+          - LiveKit ElevenLabs STT/TTS plugins + Mistral AI text LLM
         """
         if self.voice_backend != "livekit_elevenlabs":
             logger.warning(
@@ -409,7 +409,7 @@ class CrisisAgent:
                 trigger_tokens=104857,
                 sliding_window=types.SlidingWindow(target_tokens=52428),
             ),
-            # VAD: let Gemini detect natural speech endpoints
+            # VAD: let Mistral detect natural speech endpoints
             realtime_input_config=types.RealtimeInputConfig(
                 automatic_activity_detection=types.AutomaticActivityDetection(
                     disabled=False,
@@ -465,8 +465,8 @@ class CrisisAgent:
             )
         else:
             self._tasks = [
-                asyncio.create_task(self._receive_from_gemini(), name=f"{self.agent_id}_recv"),
-                asyncio.create_task(self._send_audio_to_gemini(), name=f"{self.agent_id}_audio"),
+                asyncio.create_task(self._receive_from_mistral(), name=f"{self.agent_id}_recv"),
+                asyncio.create_task(self._send_audio_to_mistral(), name=f"{self.agent_id}_audio"),
                 asyncio.create_task(self._autonomous_turn_trigger(), name=f"{self.agent_id}_auto"),
                 asyncio.create_task(self._kickoff_opening_turn(), name=f"{self.agent_id}_kickoff"),
             ]
@@ -516,7 +516,7 @@ class CrisisAgent:
         """
         Voice loop for:
           STT: LiveKit ElevenLabs STT
-          LLM: Gemini text model (gemini-3-flash-preview)
+          LLM: Mistral text model (mistral-medium-latest)
           TTS: LiveKit ElevenLabs TTS
         """
         logger.info(f"[{self.agent_id}] Starting livekit_elevenlabs voice loop")
@@ -603,7 +603,7 @@ class CrisisAgent:
             "In single-agent mode, do not fabricate debate with other agents unless explicitly asked."
         )
 
-        models_to_try = [self.text_model, "gemini-2.5-flash", "gemini-2.0-flash"]
+        models_to_try = [self.text_model, "mistral-small", "mistral-large-latest"]
         for model_name in models_to_try:
             try:
                 client = genai.Client()
@@ -815,22 +815,9 @@ class CrisisAgent:
                 if holding_turn and self.turn_manager:
                     self.turn_manager.release_turn(self.agent_id)
 
-    async def _receive_from_gemini(self):
+    async def _receive_from_mistral(self):
         """
-        PERSISTENT LOOP: Reads audio chunks + transcripts from Gemini Live.
-
-        Per voice.md §1.4:
-          response.data  → raw PCM bytes → base64 encode → WS event → browser plays
-          response.text  → transcript chunk → WS event → UI display + Observer
-
-        TURN MANAGEMENT:
-          When the first audio chunk arrives, we acquire the turn from the
-          TurnManager.  If another agent already holds the floor, we wait
-          (with a timeout) before emitting audio.  The turn is released on
-          turn_complete or interruption.
-
-        AUDIO FIELD: We use 'audio_b64' in the event payload to match
-        the frontend useWarRoomSocket handler.
+        PERSISTENT LOOP: Reads audio chunks + transcripts from Mistral AI via LiveKit.
         """
         from utils.events import push_event, push_event_direct
         from config.constants import (
@@ -1027,13 +1014,13 @@ class CrisisAgent:
                 await asyncio.sleep(1)  # Brief pause before retry
 
             # Post-turn cooldown: prevent the loop from immediately
-            # restarting and picking up a new Gemini response before
+            # restarting and picking up a new Mistral response before
             # other agents have a chance to acquire the floor.
             await asyncio.sleep(0.5)
 
         logger.info(f"[{self.agent_id}] Receive loop ended")
 
-    async def _send_audio_to_gemini(self):
+    async def _send_audio_to_mistral(self):
         """
         PERSISTENT LOOP: Drains audio_in_queue and sends PCM to agent's Live session.
         Per voice.md §1.6 — chairman mic goes into audio_in_queue, this drains it.
@@ -1146,7 +1133,7 @@ class CrisisAgent:
     async def receive_chairman_audio(self, pcm_bytes: bytes) -> None:
         """
         Called by VoiceRouter when Chairman targets this agent (or full room).
-        Per voice.md §1.6 — puts into audio_in_queue, consumed by _send_audio_to_gemini.
+        Per voice.md §1.6 — puts into audio_in_queue, consumed by _send_audio_to_mistral.
 
         ISOLATION: Only called for the intended agent. VoiceRouter enforces this.
         """

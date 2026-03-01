@@ -106,7 +106,7 @@ VOICE_STYLE_MAP = {
     "aggressive":    ["pNInz6obpgDQGcFmaJgB", "SOYHLrjzK2X1ezoPC6cr", "nPczCjzI2devNBz1zQrb"],
 }
 
-# Legacy Gemini Live voices for fallback mode when ElevenLabs is unavailable.
+# Legacy fallback voices - no longer used (ElevenLabs is always used for TTS).
 GEMINI_FALLBACK_VOICES = [
     "Aoede", "Charon", "Fenrir", "Kore", "Puck",
     "Achird", "Algenib", "Algieba", "Alnilam",

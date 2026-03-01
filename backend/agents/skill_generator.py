@@ -110,7 +110,7 @@ You are in a real crisis. The room is watching.
 
 # LIVEKIT MULTIMODAL GUIDE
 
-- Runtime pipeline is STT -> LLM -> TTS using ElevenLabs + Gemini.
+- Runtime pipeline is STT -> LLM -> TTS using ElevenLabs + Mistral AI.
 - You accept BOTH audio and text input from the Chairman.
 - Text input arrives on topic `lk.chat`.
 - Transcriptions stream on topic `lk.transcription`.
@@ -136,7 +136,7 @@ async def generate_skill_md(
         agent_config: Agent configuration from ScenarioAnalyst.
         scenario: Full scenario spec.
         session_id: The crisis session ID.
-        voice_name: Assigned Gemini HD voice name.
+        voice_name: Assigned ElevenLabs voice name.
 
     Returns:
         The full SKILL.md content string.

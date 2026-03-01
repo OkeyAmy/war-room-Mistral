@@ -36,7 +36,7 @@ class TurnManager:
         self.last_turn_end_time: float = time.monotonic()
         # Inter-turn cooldown — prevents rapid re-acquisition
         self._cooldown_until: float = 0
-        # Max seconds one agent may speak (safety valve — Gemini usually ends turns)
+        # Max seconds one agent may speak (safety valve — Mistral usually ends turns)
         # Allow fuller arguments before automatic yield; Chairman interrupt
         # still preempts immediately.
         self.max_turn_seconds: float = 75.0
@@ -93,7 +93,7 @@ class TurnManager:
     async def try_acquire_turn(self, agent_id: str) -> bool:
         """
         Non-blocking: acquire only if floor is free right now.
-        Used by _receive_from_gemini for autonomous (non-prompted) audio.
+        Used by _receive_from_mistral for autonomous (non-prompted) audio.
         Returns True if acquired, False immediately if busy.
 
         IMPORTANT: This is now a proper coroutine — callers must await it.
